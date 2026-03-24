@@ -114,7 +114,7 @@ function renderSettingsPanel(state: AppState): string {
 
   return `
     <section>
-      <div class="flex items-center gap-1">
+      <div class="flex items-center gap-1.5">
         ${renderPresetPill(state, 'fast', 'Fast')}
         ${renderPresetPill(state, 'balanced', 'Balanced')}
         ${renderPresetPill(state, 'smallest', 'Smallest')}
@@ -204,7 +204,7 @@ function renderSelectedJobPanel(job?: Job): string {
   const isCompressing = job.status === 'compressing';
 
   return `
-    <section class="space-y-2">
+    <section class="space-y-3">
       <div class="h-px w-full bg-stroke"><div data-progress-bar class="h-full bg-ember transition-all duration-300 ease-out" style="width: ${isCompressing ? job.progress : 0}%; ${isCompressing ? 'box-shadow: 0 0 6px rgba(212,136,58,0.3)' : ''}"></div></div>
 
       <div class="flex items-center justify-between text-xs text-ink-3">
@@ -212,24 +212,26 @@ function renderSelectedJobPanel(job?: Job): string {
         <button type="button" data-remove-job="${job.id}" class="shrink-0 transition-colors hover:text-red-400">Remove</button>
       </div>
 
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-2 gap-4">
         <div>
-          <div class="mb-1 text-[10px] uppercase tracking-wider text-ink-3/40">Original</div>
+          <div class="mb-1.5 text-[10px] uppercase tracking-wider text-ink-3/50">Original</div>
           <img src="${job.sourceUrl}" alt="Original" class="max-h-[45dvh] w-full rounded-xl object-contain" />
-          <div class="mt-1 font-mono text-[10px] leading-snug text-ink-3">
-            ${formatBytes(job.sourceFile.size)} \u00b7 ${getFileKindLabel(job.sourceFile.type)} \u00b7 ${formatDimensions(job.sourceDimensions?.width, job.sourceDimensions?.height)}
+          <div class="mt-2 font-mono text-[11px] leading-relaxed text-ink-3">
+            ${formatBytes(job.sourceFile.size)} \u00b7 ${getFileKindLabel(job.sourceFile.type)}<br />
+            ${formatDimensions(job.sourceDimensions?.width, job.sourceDimensions?.height)}
           </div>
         </div>
         <div>
-          <div class="mb-1 text-[10px] uppercase tracking-wider text-ink-3/40">Compressed</div>
+          <div class="mb-1.5 text-[10px] uppercase tracking-wider text-ink-3/50">Compressed</div>
           <img src="${job.compressedUrl ?? job.sourceUrl}" alt="Compressed" class="max-h-[45dvh] w-full rounded-xl object-contain" />
-          <div data-compressed-stats class="mt-1 font-mono text-[10px] leading-snug text-ink-3">
-            ${compressedSize} \u00b7 ${getFileKindLabel(job.compressedFile?.type ?? job.sourceFile.type)} \u00b7 ${formatDimensions(job.compressedDimensions?.width, job.compressedDimensions?.height)}
+          <div data-compressed-stats class="mt-2 font-mono text-[11px] leading-relaxed text-ink-3">
+            ${compressedSize} \u00b7 ${getFileKindLabel(job.compressedFile?.type ?? job.sourceFile.type)}<br />
+            ${formatDimensions(job.compressedDimensions?.width, job.compressedDimensions?.height)}
           </div>
         </div>
       </div>
 
-      <div data-action-bar class="flex items-center gap-3">
+      <div data-action-bar class="flex items-center gap-3 pt-1">
         ${renderActionBar(job)}
       </div>
     </section>
