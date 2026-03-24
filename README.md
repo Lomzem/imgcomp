@@ -11,7 +11,7 @@ A fast, private, client-side image compression app. Compress images directly in 
 
 ## Tech Stack
 
-Astro, TypeScript, Tailwind CSS, [browser-image-compression](https://github.com/nicolo-ribaudo/browser-image-compression)
+Astro, TypeScript, Tailwind CSS, [browser-image-compression](https://github.com/Donaldcwl/browser-image-compression)
 
 ## Development
 
