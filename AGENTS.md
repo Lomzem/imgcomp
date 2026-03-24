@@ -1,0 +1,6 @@
+- ALWAYS use `bun` instead of `npm`/`node`!
+- `git commit` messages should follow **conventional commit standards**.
+- ALWAYS try to use _Tailwind_ rather than _standard CSS_
+- After every significant change, make sure your changes do not violate linting checks from `bun run check`
+- This app is designed to be **highly cacheable**, **performant**, **static**, and **client-side**. We will **NOT** have a server or use a frontend framework like React.
+- This app priotizes UX effectiveness, efficiency, and satisfaction.
