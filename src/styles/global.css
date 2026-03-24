@@ -4,7 +4,6 @@
   --color-ground: #0a0a09;
   --color-raised: #141413;
   --color-lifted: #1c1c1a;
-  --color-overlay: #242422;
   --color-stroke: #2c2c29;
   --color-stroke-bold: #3d3d38;
   --color-ink: #e8e4de;
@@ -49,6 +48,10 @@
   select:focus-visible,
   label:focus-visible {
     @apply ring-2 ring-ember/50 ring-offset-2 ring-offset-ground;
+  }
+
+  [data-region]:empty {
+    display: none;
   }
 
   input[type='range'] {
@@ -101,12 +104,6 @@
   ::-webkit-scrollbar-thumb {
     background: var(--color-stroke-bold);
     border-radius: 3px;
-  }
-}
-
-@layer components {
-  .card {
-    @apply rounded-2xl border border-stroke bg-raised p-4 sm:p-5;
   }
 }
 

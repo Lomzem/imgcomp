@@ -1,37 +1,20 @@
-<div class="mx-auto flex min-h-screen max-w-5xl flex-col px-4 pb-20 pt-6 sm:px-6 lg:px-8">
-  <header class="flex items-center justify-between" style="animation: rise 0.4s ease-out both">
-    <div class="select-none font-mono text-sm font-semibold tracking-tight">
+<div class="mx-auto flex min-h-screen max-w-2xl flex-col px-5 pb-20 pt-8">
+  <header style="animation: rise 0.4s ease-out both">
+    <span class="select-none font-mono text-xs tracking-tight">
       <span class="text-ember">img</span><span class="text-ink-3">comp</span>
-    </div>
-    <div class="font-mono text-[10px] uppercase tracking-[0.15em] text-ink-3/50">
-      local · private · exif stripped
-    </div>
+    </span>
   </header>
 
-  <main id="compressor-app" data-app-root class="mt-6 grid gap-4 lg:grid-cols-[20rem_1fr]">
-    <div
-      data-region="intake"
-      class="order-1 lg:col-start-1"
-      style="animation: rise 0.4s ease-out 0.05s both"
-    >
-    </div>
-    <div
-      data-region="selected"
-      class="order-2 lg:col-start-2 lg:row-start-1 lg:row-span-3"
-      style="animation: rise 0.4s ease-out 0.1s both"
-    >
-    </div>
-    <div
-      data-region="settings"
-      class="order-3 lg:col-start-1"
-      style="animation: rise 0.4s ease-out 0.15s both"
-    >
-    </div>
-    <div
-      data-region="queue"
-      class="order-4 lg:col-start-1"
-      style="animation: rise 0.4s ease-out 0.2s both"
-    >
-    </div>
+  <main
+    id="compressor-app"
+    data-app-root
+    data-drop-zone
+    class="mt-6 flex flex-1 flex-col gap-5"
+    style="animation: rise 0.4s ease-out 0.06s both"
+  >
+    <div data-region="intake"></div>
+    <div data-region="queue"></div>
+    <div data-region="selected"></div>
+    <div data-region="settings"></div>
   </main>
 </div>
