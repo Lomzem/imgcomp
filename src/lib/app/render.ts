@@ -129,7 +129,7 @@ function renderSettingsPanel(state: AppState): string {
       ${
         state.advancedOpen
           ? `
-            <div class="mt-4 grid gap-3 rounded-xl bg-raised p-4">
+            <div class="mt-3 grid gap-2.5 rounded-xl bg-raised p-3">
               <label class="grid gap-1.5 text-xs">
                 <span class="text-ink-3">Output</span>
                 <select data-setting="outputType" class="rounded-lg border border-stroke bg-ground px-3 py-2 font-mono text-sm text-ink">
@@ -204,7 +204,7 @@ function renderSelectedJobPanel(job?: Job): string {
   const isCompressing = job.status === 'compressing';
 
   return `
-    <section class="space-y-4">
+    <section class="space-y-2">
       <div class="h-px w-full bg-stroke"><div data-progress-bar class="h-full bg-ember transition-all duration-300 ease-out" style="width: ${isCompressing ? job.progress : 0}%; ${isCompressing ? 'box-shadow: 0 0 6px rgba(212,136,58,0.3)' : ''}"></div></div>
 
       <div class="flex items-center justify-between text-xs text-ink-3">
@@ -214,19 +214,17 @@ function renderSelectedJobPanel(job?: Job): string {
 
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <div class="mb-1.5 text-[10px] uppercase tracking-wider text-ink-3/40">Original</div>
-          <img src="${job.sourceUrl}" alt="Original" class="aspect-square w-full rounded-xl object-cover" />
-          <div class="mt-2 font-mono text-[11px] leading-relaxed text-ink-3">
-            ${formatBytes(job.sourceFile.size)} \u00b7 ${getFileKindLabel(job.sourceFile.type)}<br />
-            ${formatDimensions(job.sourceDimensions?.width, job.sourceDimensions?.height)}
+          <div class="mb-1 text-[10px] uppercase tracking-wider text-ink-3/40">Original</div>
+          <img src="${job.sourceUrl}" alt="Original" class="max-h-[45dvh] w-full rounded-xl object-contain" />
+          <div class="mt-1 font-mono text-[10px] leading-snug text-ink-3">
+            ${formatBytes(job.sourceFile.size)} \u00b7 ${getFileKindLabel(job.sourceFile.type)} \u00b7 ${formatDimensions(job.sourceDimensions?.width, job.sourceDimensions?.height)}
           </div>
         </div>
         <div>
-          <div class="mb-1.5 text-[10px] uppercase tracking-wider text-ink-3/40">Compressed</div>
-          <img src="${job.compressedUrl ?? job.sourceUrl}" alt="Compressed" class="aspect-square w-full rounded-xl object-cover" />
-          <div data-compressed-stats class="mt-2 font-mono text-[11px] leading-relaxed text-ink-3">
-            ${compressedSize} \u00b7 ${getFileKindLabel(job.compressedFile?.type ?? job.sourceFile.type)}<br />
-            ${formatDimensions(job.compressedDimensions?.width, job.compressedDimensions?.height)}
+          <div class="mb-1 text-[10px] uppercase tracking-wider text-ink-3/40">Compressed</div>
+          <img src="${job.compressedUrl ?? job.sourceUrl}" alt="Compressed" class="max-h-[45dvh] w-full rounded-xl object-contain" />
+          <div data-compressed-stats class="mt-1 font-mono text-[10px] leading-snug text-ink-3">
+            ${compressedSize} \u00b7 ${getFileKindLabel(job.compressedFile?.type ?? job.sourceFile.type)} \u00b7 ${formatDimensions(job.compressedDimensions?.width, job.compressedDimensions?.height)}
           </div>
         </div>
       </div>
