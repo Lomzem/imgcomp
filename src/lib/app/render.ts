@@ -65,14 +65,14 @@ function renderIntakePanel(state: AppState): string {
   if (state.jobs.length === 0) {
     return `
       <section class="flex flex-1 flex-col items-center justify-center text-center">
-        <div class="text-sm text-ink-3/50">Drop an image anywhere, or</div>
+        <div class="text-sm text-ink-3">Drop an image anywhere, or</div>
         <label for="file-input" class="mt-4 inline-block cursor-pointer rounded-xl bg-ember px-6 py-3 text-sm font-medium text-ground transition-colors hover:bg-ember/85 active:scale-[0.97]">
           Browse files
         </label>
         <input id="file-input" data-file-input type="file" accept="image/*" multiple class="hidden" />
         ${
           supportsClipboardRead()
-            ? '<button type="button" data-paste-button class="mt-4 text-xs text-ink-3/40 transition-colors hover:text-ink-3">or paste from clipboard</button>'
+            ? '<button type="button" data-paste-button class="mt-4 text-xs text-ink-3 transition-colors hover:text-ink-2">or paste from clipboard</button>'
             : ''
         }
         ${state.message && state.message !== 'Paste or choose an image to compress it locally on your device.' ? `<div class="mt-6 text-xs text-ink-3/50">${state.message}</div>` : ''}
