@@ -31,5 +31,8 @@
       "bun run format",
       "bun run lint"
     ]
+  },
+  "dependencies": {
+    "browser-image-compression": "^2.0.2"
   }
 }
