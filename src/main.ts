@@ -37,6 +37,8 @@ type Job = {
   progress: number;
   error?: string;
   abortController?: AbortController;
+  runToken: number;
+  restartOnAbort?: boolean;
 };
 
 type AppState = {
@@ -55,6 +57,7 @@ if (!rootElement) {
 }
 
 const root = rootElement;
+const AUTO_RECOMPRESS_DELAY_MS = 300;
 
 const state: AppState = {
   jobs: [],
@@ -63,6 +66,8 @@ const state: AppState = {
   processing: false,
   message: 'Paste or choose an image to compress it locally on your device.',
 };
+
+let selectedRecompressTimer: number | undefined;
 
 function setMessage(message?: string): void {
   state.message = message;
@@ -87,7 +92,15 @@ function createJob(file: File): Job {
     sourceUrl: URL.createObjectURL(file),
     status: 'queued',
     progress: 0,
+    runToken: 0,
   };
+}
+
+function clearSelectedRecompressTimer(): void {
+  if (selectedRecompressTimer !== undefined) {
+    window.clearTimeout(selectedRecompressTimer);
+    selectedRecompressTimer = undefined;
+  }
 }
 
 async function enrichJobDimensions(job: Job): Promise<void> {
@@ -427,8 +440,11 @@ async function addFiles(files: File[]): Promise<void> {
   await processQueue();
 }
 
-async function runCompression(job: Job): Promise<void> {
+async function runCompression(job: Job, message?: string): Promise<void> {
   const abortController = new AbortController();
+  const runToken = job.runToken + 1;
+
+  job.runToken = runToken;
   job.abortController = abortController;
   job.status = 'compressing';
   job.progress = 1;
@@ -441,10 +457,18 @@ async function runCompression(job: Job): Promise<void> {
       settings: state.settings,
       signal: abortController.signal,
       onProgress: (progress) => {
+        if (job.runToken !== runToken) {
+          return;
+        }
+
         job.progress = progress;
         renderApp();
       },
     });
+
+    if (job.runToken !== runToken) {
+      return;
+    }
 
     if (job.compressedUrl) {
       URL.revokeObjectURL(job.compressedUrl);
@@ -455,20 +479,36 @@ async function runCompression(job: Job): Promise<void> {
     job.status = 'done';
     job.progress = 100;
     job.abortController = undefined;
+    job.restartOnAbort = undefined;
     job.compressedDimensions = await getImageDimensions(compressedFile);
-    setMessage('Compression finished. Download when ready.');
+
+    if (message) {
+      setMessage(message);
+    }
   } catch (error) {
+    if (job.runToken !== runToken) {
+      return;
+    }
+
     job.abortController = undefined;
 
-    if (error instanceof Error && abortController.signal.aborted) {
-      job.status = 'cancelled';
-      job.progress = 0;
-      job.error = 'Compression cancelled.';
-      setMessage('Compression cancelled.');
+    if (abortController.signal.aborted) {
+      if (job.restartOnAbort) {
+        job.status = 'queued';
+        job.progress = 0;
+        job.error = undefined;
+        job.restartOnAbort = undefined;
+      } else {
+        job.status = 'cancelled';
+        job.progress = 0;
+        job.error = 'Compression cancelled.';
+        setMessage('Compression cancelled.');
+      }
     } else {
       job.status = 'error';
       job.progress = 0;
       job.error = error instanceof Error ? error.message : 'Compression failed.';
+      job.restartOnAbort = undefined;
       setMessage(job.error);
     }
   }
@@ -484,12 +524,14 @@ async function processQueue(): Promise<void> {
   state.processing = true;
 
   try {
-    for (const job of state.jobs) {
-      if (job.status !== 'queued') {
-        continue;
+    while (true) {
+      const nextJob = state.jobs.find((job) => job.status === 'queued');
+
+      if (!nextJob) {
+        break;
       }
 
-      await runCompression(job);
+      await runCompression(nextJob, 'Compression finished. Download when ready.');
     }
   } finally {
     state.processing = false;
@@ -497,7 +539,25 @@ async function processQueue(): Promise<void> {
   }
 }
 
+function scheduleSelectedRecompression(): void {
+  const selectedJob = getSelectedJob();
+
+  if (!selectedJob) {
+    return;
+  }
+
+  clearSelectedRecompressTimer();
+  setMessage('Updating selected preview...');
+  renderApp();
+
+  selectedRecompressTimer = window.setTimeout(async () => {
+    selectedRecompressTimer = undefined;
+    await recompressSelected(true);
+  }, AUTO_RECOMPRESS_DELAY_MS);
+}
+
 function removeJob(jobId: string): void {
+  clearSelectedRecompressTimer();
   const jobIndex = state.jobs.findIndex((job) => job.id === jobId);
 
   if (jobIndex === -1) {
@@ -523,6 +583,7 @@ function updatePreset(presetId: PresetId): void {
   };
   setMessage(`Using the ${presetId} preset.`);
   renderApp();
+  scheduleSelectedRecompression();
 }
 
 function updateSetting(name: string, value: string): void {
@@ -542,21 +603,33 @@ function updateSetting(name: string, value: string): void {
     state.settings.initialQuality = Number(value);
   }
 
-  setMessage('Advanced settings updated. Recompress to apply them.');
+  setMessage('Advanced settings updated.');
   renderApp();
+  scheduleSelectedRecompression();
 }
 
-async function recompressSelected(): Promise<void> {
+async function recompressSelected(isLiveUpdate = false): Promise<void> {
   const selectedJob = getSelectedJob();
 
   if (!selectedJob) {
     return;
   }
 
+  clearSelectedRecompressTimer();
+
+  if (selectedJob.status === 'compressing') {
+    selectedJob.restartOnAbort = true;
+    selectedJob.abortController?.abort();
+  }
+
   selectedJob.status = 'queued';
   selectedJob.progress = 0;
   selectedJob.error = undefined;
-  setMessage('Recompressing selected image...');
+
+  if (!isLiveUpdate) {
+    setMessage('Recompressing selected image...');
+  }
+
   renderApp();
   await processQueue();
 }
