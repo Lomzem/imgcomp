@@ -65,9 +65,9 @@ function renderIntakePanel(state: AppState): string {
   if (state.jobs.length === 0) {
     return `
       <section class="flex flex-1 flex-col items-center justify-center text-center">
-        <label for="file-input" class="group cursor-pointer">
-          <div class="text-sm text-ink-3">Drop an image anywhere, or</div>
-          <div class="mt-1 text-sm text-ember transition-colors group-hover:text-ember/70">browse files</div>
+        <div class="text-sm text-ink-3/50">Drop an image anywhere, or</div>
+        <label for="file-input" class="mt-4 inline-block cursor-pointer rounded-xl bg-ember px-6 py-3 text-sm font-medium text-ground transition-colors hover:bg-ember/85 active:scale-[0.97]">
+          Browse files
         </label>
         <input id="file-input" data-file-input type="file" accept="image/*" multiple class="hidden" />
         ${
@@ -181,11 +181,7 @@ function renderSelectedJobPanel(job?: Job): string {
 
   return `
     <section class="space-y-4">
-      ${
-        isCompressing
-          ? `<div class="h-px w-full bg-stroke"><div class="h-full bg-ember transition-all duration-300 ease-out" style="width: ${job.progress}%; box-shadow: 0 0 6px rgba(212,136,58,0.3)"></div></div>`
-          : ''
-      }
+      <div class="h-px w-full bg-stroke"><div class="h-full bg-ember transition-all duration-300 ease-out" style="width: ${isCompressing ? job.progress : 0}%; ${isCompressing ? 'box-shadow: 0 0 6px rgba(212,136,58,0.3)' : ''}"></div></div>
 
       <div class="flex items-center justify-between text-xs text-ink-3">
         <span class="min-w-0 truncate">${job.sourceFile.name}</span>
