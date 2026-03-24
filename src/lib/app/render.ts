@@ -65,9 +65,9 @@ function renderIntakePanel(state: AppState): string {
   if (state.jobs.length === 0) {
     return `
       <section class="flex flex-1 flex-col items-center justify-center text-center">
-        <div class="text-sm text-ink-3">Drop an image anywhere, or</div>
-        <label for="file-input" class="mt-4 inline-block cursor-pointer rounded-xl bg-ember px-6 py-3 text-sm font-medium text-ground transition-colors hover:bg-ember/85 active:scale-[0.97]">
-          Browse files
+        <label for="file-input" class="flex w-full max-w-md cursor-pointer flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-stroke-bold p-10 transition-colors hover:border-ember/50 hover:bg-raised/50 active:scale-[0.99]">
+          <svg class="h-10 w-10 text-ink-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <div class="text-sm text-ink-3">Drop an image anywhere, or <span class="font-medium text-ember">browse files</span></div>
         </label>
         <input id="file-input" data-file-input type="file" accept="image/*" multiple class="hidden" />
         ${
