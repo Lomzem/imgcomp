@@ -1,0 +1,35 @@
+<div
+  class="mx-auto flex min-h-screen max-w-6xl flex-col px-4 pb-28 pt-4 text-slate-900 sm:px-6 lg:px-8"
+>
+  <header class="panel">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div class="max-w-2xl">
+        <div class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">imgcomp</div>
+        <h1 class="mt-2 text-3xl font-semibold text-slate-950">
+          Fast local image compression for mobile-first use.
+        </h1>
+        <p class="mt-3 text-sm leading-6 text-slate-600">
+          Images stay on your device. Single-image speed comes first, with batch compression and
+          clipboard support when the browser allows it.
+        </p>
+      </div>
+      <div class="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+        EXIF stripped by default
+      </div>
+    </div>
+  </header>
+
+  <main
+    id="compressor-app"
+    data-app-root
+    class="mt-4 grid gap-4 lg:grid-cols-[22rem_minmax(0,1fr)]"
+  >
+    <section class="space-y-4">
+      <div data-region="intake"></div>
+      <div data-region="settings"></div>
+      <div data-region="queue"></div>
+    </section>
+
+    <section data-region="selected"></section>
+  </main>
+</div>

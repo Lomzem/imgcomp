@@ -16,6 +16,6 @@ export default tseslint.config(
     },
   },
   {
-    ignores: ['dist/', 'node_modules/'],
+    ignores: ['.astro/', 'dist/', 'node_modules/'],
   }
 );
