@@ -169,19 +169,43 @@ function renderQueuePanel(state: AppState): string {
   `;
 }
 
+function renderActionBar(job: Job): string {
+  const canDownload = Boolean(job.compressedFile);
+  const isCompressing = job.status === 'compressing';
+  const savings = job.compressedFile
+    ? getSavingsRatio(job.sourceFile.size, job.compressedFile.size).toFixed(0)
+    : null;
+
+  return `
+    ${
+      canDownload
+        ? '<button type="button" data-download-selected class="rounded-lg bg-ember px-3.5 py-2 text-sm font-medium text-ground transition-colors hover:bg-ember/85">Download</button>'
+        : ''
+    }
+    ${
+      savings
+        ? `<span class="font-mono text-xs text-emerald-500">\u2212${savings}%</span>`
+        : `<span class="text-xs text-ink-3">${getStatusLabel(job)}</span>`
+    }
+    <span class="flex-1"></span>
+    <button type="button" data-recompress-selected class="text-xs text-ink-3 transition-colors hover:text-ink-2">Recompress</button>
+    ${
+      isCompressing
+        ? '<button type="button" data-cancel-selected class="text-xs text-ink-3 transition-colors hover:text-red-400">Cancel</button>'
+        : ''
+    }
+  `;
+}
+
 function renderSelectedJobPanel(job?: Job): string {
   if (!job) return '';
 
   const compressedSize = job.compressedFile ? formatBytes(job.compressedFile.size) : '\u2014';
-  const savings = job.compressedFile
-    ? getSavingsRatio(job.sourceFile.size, job.compressedFile.size).toFixed(0)
-    : null;
-  const canDownload = Boolean(job.compressedFile);
   const isCompressing = job.status === 'compressing';
 
   return `
     <section class="space-y-4">
-      <div class="h-px w-full bg-stroke"><div class="h-full bg-ember transition-all duration-300 ease-out" style="width: ${isCompressing ? job.progress : 0}%; ${isCompressing ? 'box-shadow: 0 0 6px rgba(212,136,58,0.3)' : ''}"></div></div>
+      <div class="h-px w-full bg-stroke"><div data-progress-bar class="h-full bg-ember transition-all duration-300 ease-out" style="width: ${isCompressing ? job.progress : 0}%; ${isCompressing ? 'box-shadow: 0 0 6px rgba(212,136,58,0.3)' : ''}"></div></div>
 
       <div class="flex items-center justify-between text-xs text-ink-3">
         <span class="min-w-0 truncate">${job.sourceFile.name}</span>
@@ -200,39 +224,52 @@ function renderSelectedJobPanel(job?: Job): string {
         <div>
           <div class="mb-1.5 text-[10px] uppercase tracking-wider text-ink-3/40">Compressed</div>
           <img src="${job.compressedUrl ?? job.sourceUrl}" alt="Compressed" class="aspect-square w-full rounded-xl object-cover" />
-          <div class="mt-2 font-mono text-[11px] leading-relaxed text-ink-3">
+          <div data-compressed-stats class="mt-2 font-mono text-[11px] leading-relaxed text-ink-3">
             ${compressedSize} \u00b7 ${getFileKindLabel(job.compressedFile?.type ?? job.sourceFile.type)}<br />
             ${formatDimensions(job.compressedDimensions?.width, job.compressedDimensions?.height)}
           </div>
         </div>
       </div>
 
-      <div class="flex items-center gap-3">
-        ${
-          canDownload
-            ? '<button type="button" data-download-selected class="rounded-lg bg-ember px-3.5 py-2 text-sm font-medium text-ground transition-colors hover:bg-ember/85">Download</button>'
-            : ''
-        }
-        ${
-          savings
-            ? `<span class="font-mono text-xs text-emerald-500">\u2212${savings}%</span>`
-            : `<span class="text-xs text-ink-3">${getStatusLabel(job)}</span>`
-        }
-        <span class="flex-1"></span>
-        <button type="button" data-recompress-selected class="text-xs text-ink-3 transition-colors hover:text-ink-2">Recompress</button>
-        ${
-          isCompressing
-            ? '<button type="button" data-cancel-selected class="text-xs text-ink-3 transition-colors hover:text-red-400">Cancel</button>'
-            : ''
-        }
+      <div data-action-bar class="flex items-center gap-3">
+        ${renderActionBar(job)}
       </div>
     </section>
   `;
 }
 
+function patchSelectedPanel(region: HTMLElement, job: Job): void {
+  const isCompressing = job.status === 'compressing';
+
+  const progressBar = region.querySelector<HTMLElement>('[data-progress-bar]');
+  if (progressBar) {
+    progressBar.style.width = `${isCompressing ? job.progress : 0}%`;
+    progressBar.style.boxShadow = isCompressing ? '0 0 6px rgba(212,136,58,0.3)' : '';
+  }
+
+  const actionBar = region.querySelector<HTMLElement>('[data-action-bar]');
+  if (actionBar) {
+    actionBar.innerHTML = renderActionBar(job);
+  }
+}
+
 export function renderApp(state: AppState, regions: AppRegions): void {
   regions.intake.innerHTML = renderIntakePanel(state);
   regions.queue.innerHTML = renderQueuePanel(state);
-  regions.selected.innerHTML = renderSelectedJobPanel(getSelectedJob(state));
+
+  const job = getSelectedJob(state);
+  const sel = regions.selected;
+  const prevJobId = sel.dataset.renderedJobId ?? '';
+  const prevCompUrl = sel.dataset.renderedCompUrl ?? '';
+  const currCompUrl = job?.compressedUrl ?? '';
+
+  if (job && job.id === prevJobId && currCompUrl === prevCompUrl) {
+    patchSelectedPanel(sel, job);
+  } else {
+    sel.innerHTML = renderSelectedJobPanel(job);
+    sel.dataset.renderedJobId = job?.id ?? '';
+    sel.dataset.renderedCompUrl = currCompUrl;
+  }
+
   regions.settings.innerHTML = renderSettingsPanel(state);
 }
