@@ -1,8 +1,13 @@
 <script lang="ts">
   import FileUpload from "./components/FileUpload.svelte"
-  import { fileUpload } from "./fileUpload.svelte"
+  import ImageSideBySide from "./components/ImageSideBySide.svelte"
+  import { imageUpload } from "./imageUpload.svelte.ts"
 </script>
 
-{#if !fileUpload.file}
-  <FileUpload />
-{/if}
+<main class="grid max-w-svw p-4">
+  {#if !imageUpload.originalImage}
+    <FileUpload />
+  {:else}
+    <ImageSideBySide />
+  {/if}
+</main>
