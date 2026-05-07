@@ -4,7 +4,7 @@
   import Progress from "$lib/components/ui/progress/progress.svelte"
   import Skeleton from "$lib/components/ui/skeleton/skeleton.svelte"
   import { IconLoader2 } from "@tabler/icons-svelte"
-  import { formatSize } from "../../lib/formatText.ts"
+  import { formatSize, formatSizeReduction } from "../../lib/formatText.ts"
   import { imageUpload } from "../imageUpload.svelte"
 
   import imageCompression from "browser-image-compression"
@@ -63,7 +63,7 @@
     </nav>
   </header>
 
-  <div class="flex justify-center gap-3 text-xl">
+  <div class="flex justify-center gap-3">
     {#if imageUpload.originalImage}
       <div class="w-1/2">
         <div
@@ -83,8 +83,8 @@
             }}
           />
         </div>
-        <p class="mt-2">{originalImageSize}</p>
-        <p>
+        <p class="mt-2 text-xl">{originalImageSize}</p>
+        <p class="text-muted-foreground">
           {originalImageDimensions?.naturalWidth} x
           {originalImageDimensions?.naturalHeight}
         </p>
@@ -124,8 +124,13 @@
               }}
             />
           </div>
-          <p class="mt-2">{formatSize(compressedImage.size)}</p>
-          <p>
+          <p class="mt-2 text-xl">
+            {formatSize(compressedImage.size)}
+            <span class="text-chart-1"
+              >({formatSizeReduction(imageUpload.originalImage?.size ?? 0, compressedImage.size)})
+            </span>
+          </p>
+          <p class="text-muted-foreground">
             {compressedImageDimensions?.naturalWidth} x
             {compressedImageDimensions?.naturalHeight}
           </p>
