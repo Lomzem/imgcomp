@@ -203,14 +203,25 @@
     {/if}
   </div>
 
-  {#if imageUpload.compressedImage && !compressedImageFile}
-    <Button disabled class="mt-4 w-full cursor-not-allowed self-center py-8 text-2xl lg:max-w-lg"
-      ><IconLoader2 class="size-6 animate-spin" /></Button
-    >
-  {:else if compressedImageFile}
+  {#if compressedImageURL}
     <Button
       class="mt-4 w-full cursor-pointer self-center py-8 text-2xl lg:max-w-lg"
-      onclick={() => {}}>Download</Button
+      onclick={() => {
+        if (!compressedImageFile) return
+        const originalName = imageUpload.originalImage?.name
+        const extensionIndex = originalName?.lastIndexOf(".") ?? -1
+        const baseName =
+          extensionIndex > 0 ? originalName?.slice(0, extensionIndex) : (originalName ?? "image")
+        const link = document.createElement("a")
+        link.href = compressedImageURL!
+        link.download = `${baseName}-compressed.${compressedImageFile.name.split(".").pop() ?? "jpg"}`
+        link.click()
+        link.remove()
+      }}>Download</Button
+    >
+  {:else}
+    <Button disabled class="mt-4 w-full cursor-not-allowed self-center py-8 text-2xl lg:max-w-lg"
+      ><IconLoader2 class="size-6 animate-spin" /></Button
     >
   {/if}
 </div>
