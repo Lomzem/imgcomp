@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Button from "$lib/components/ui/button/button.svelte"
   import Input from "$lib/components/ui/input/input.svelte"
   import { imageUpload } from "../imageUpload.svelte.ts"
 </script>
@@ -27,3 +28,4 @@
     alt="Upload an image to compress"
   />
 </form>
+<Button variant="outline" size="lg" class="mt-2 w-full py-6 lg:max-w-lg">Paste Image</Button>
