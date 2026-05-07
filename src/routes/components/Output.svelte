@@ -24,7 +24,31 @@
     })
   })
 
+  let originalImageURL = $derived.by(() => {
+    if (!imageUpload.originalImage) return
+    return URL.createObjectURL(imageUpload.originalImage)
+  })
+  let compressedImageURL = $derived(
+    imageUpload.compressedImage?.then((image) => URL.createObjectURL(image)),
+  )
+
   let originalImageSize = $derived(formatSize(imageUpload.originalImage?.size ?? 0))
+  let compressedImageSize = $derived.by(() => {
+    if (!imageUpload.compressedImage) return
+    return imageUpload.compressedImage.then((file) => formatSize(file.size))
+  })
+  let compressedImageSizeReduction = $derived.by(() => {
+    if (!imageUpload.originalImage) return
+    if (!imageUpload.compressedImage) return
+    return imageUpload.compressedImage.then((compressed) =>
+      formatSizeReduction(imageUpload.originalImage?.size ?? 0, compressed.size),
+    )
+  })
+
+  let compressedPromises = $derived(
+    Promise.all([compressedImageSize, compressedImageURL, compressedImageSizeReduction]),
+  )
+
   let originalImageElement: HTMLImageElement | undefined = $state()
   let compressedImageElement: HTMLImageElement | undefined = $state()
 
@@ -38,6 +62,13 @@
       ? `${originalImageDimensions.naturalWidth} / ${originalImageDimensions.naturalHeight}`
       : "1 / 1",
   )
+
+  function reset() {
+    if (originalImageURL) URL.revokeObjectURL(originalImageURL)
+    if (compressedImageURL) compressedImageURL.then((url) => URL.revokeObjectURL(url))
+    imageUpload.fileList = undefined
+    imageUpload.compressedImage = undefined
+  }
 </script>
 
 <div class="flex flex-col">
@@ -46,13 +77,7 @@
       <Breadcrumb.Root>
         <Breadcrumb.List class="text-3xl">
           <Breadcrumb.Item>
-            <Breadcrumb.Link
-              class="cursor-pointer"
-              onclick={() => {
-                imageUpload.fileList = undefined
-                imageUpload.compressedImage = undefined
-              }}>Upload</Breadcrumb.Link
-            >
+            <Breadcrumb.Link class="cursor-pointer" onclick={reset}>Upload</Breadcrumb.Link>
           </Breadcrumb.Item>
           <Breadcrumb.Separator />
           <Breadcrumb.Item>
@@ -72,7 +97,7 @@
         >
           <img
             bind:this={originalImageElement}
-            src={URL.createObjectURL(imageUpload.originalImage)}
+            src={originalImageURL}
             alt="User Uploaded"
             class="absolute inset-0 h-full w-full object-contain"
             onload={() => {
@@ -92,7 +117,7 @@
     {/if}
 
     {#if imageUpload.compressedImage}
-      {#await imageUpload.compressedImage}
+      {#await compressedPromises}
         <div class="w-1/2">
           <div
             class="w-full overflow-hidden rounded-md"
@@ -105,7 +130,7 @@
             <span>{compressionProgress}%</span>
           </div>
         </div>
-      {:then compressedImage}
+      {:then [compressedImageSize, compressedImageURL, compressedImageSizeReduction]}
         <div class="w-1/2">
           <div
             class="relative w-full overflow-hidden rounded-md"
@@ -113,7 +138,7 @@
           >
             <img
               bind:this={compressedImageElement}
-              src={URL.createObjectURL(compressedImage)}
+              src={compressedImageURL}
               alt="Compressed"
               class="absolute inset-0 h-full w-full object-contain"
               onload={() => {
@@ -125,10 +150,8 @@
             />
           </div>
           <p class="mt-2 text-xl">
-            {formatSize(compressedImage.size)}
-            <span class="text-chart-1"
-              >({formatSizeReduction(imageUpload.originalImage?.size ?? 0, compressedImage.size)})
-            </span>
+            {compressedImageSize}
+            <span class="text-chart-1">({compressedImageSizeReduction}) </span>
           </p>
           <p class="text-muted-foreground">
             {compressedImageDimensions?.naturalWidth} x
@@ -143,9 +166,10 @@
     <Button disabled class="mt-4 w-full cursor-not-allowed self-center py-8 text-2xl lg:max-w-lg"
       ><IconLoader2 class="size-6 animate-spin" /></Button
     >
-  {:then}
-    <Button class="mt-4 w-full cursor-pointer self-center py-8 text-2xl lg:max-w-lg"
-      >Download</Button
+  {:then compressedImage}
+    <Button
+      class="mt-4 w-full cursor-pointer self-center py-8 text-2xl lg:max-w-lg"
+      onclick={() => {}}>Download</Button
     >
   {/await}
 </div>
