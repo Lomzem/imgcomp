@@ -44,7 +44,7 @@
   <header class="mb-4">
     <nav>
       <Breadcrumb.Root>
-        <Breadcrumb.List class="text-2xl">
+        <Breadcrumb.List class="text-3xl">
           <Breadcrumb.Item>
             <Breadcrumb.Link
               class="cursor-pointer"
@@ -63,7 +63,7 @@
     </nav>
   </header>
 
-  <div class="flex justify-center gap-3">
+  <div class="flex justify-center gap-3 text-xl">
     {#if imageUpload.originalImage}
       <div class="w-1/2">
         <div
@@ -101,7 +101,7 @@
             <Skeleton class="h-full w-full" />
           </div>
           <div class="mt-2 flex items-center gap-2">
-            <Progress class="h-2" value={compressionProgress} />
+            <Progress class="h-4" value={compressionProgress} />
             <span>{compressionProgress}%</span>
           </div>
         </div>
