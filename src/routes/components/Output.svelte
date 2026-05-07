@@ -6,10 +6,15 @@
   import { IconLoader2 } from "@tabler/icons-svelte"
   import { formatSize, formatSizeReduction } from "../../lib/formatText.ts"
   import { imageUpload } from "../imageUpload.svelte"
+  import { Tween, prefersReducedMotion } from "svelte/motion"
+  import { fade, fly } from "svelte/transition"
 
   import imageCompression from "browser-image-compression"
 
   let compressionProgress = $state(0)
+  const tweenedCompressionProgress = new Tween(0, {
+    duration: prefersReducedMotion.current ? 0 : 160,
+  })
   let originalImageURL = $state<string | undefined>()
   let compressedImageURL = $state<string | undefined>()
   let compressedImageFile = $state<File | undefined>()
@@ -18,6 +23,9 @@
     const originalImage = imageUpload.originalImage
 
     compressionProgress = 0
+    tweenedCompressionProgress.set(0, {
+      duration: prefersReducedMotion.current ? 0 : 100,
+    })
     originalImageDimensions = undefined
     compressedImageDimensions = undefined
 
@@ -33,6 +41,9 @@
       useWebWorker: true,
       onProgress(progress) {
         compressionProgress = progress
+        tweenedCompressionProgress.set(progress, {
+          duration: prefersReducedMotion.current ? 0 : 140,
+        })
       },
     })
   })
@@ -114,7 +125,10 @@
 
 <div class="flex flex-col">
   <header class="mb-4">
-    <nav>
+    <nav
+      in:fly={{ y: prefersReducedMotion.current ? 0 : 6, duration: 160 }}
+      out:fade={{ duration: prefersReducedMotion.current ? 0 : 100 }}
+    >
       <Breadcrumb.Root>
         <Breadcrumb.List class="text-3xl">
           <Breadcrumb.Item>
@@ -131,7 +145,11 @@
 
   <div class="flex justify-center gap-3">
     {#if imageUpload.originalImage}
-      <div class="w-1/2">
+      <div
+        class="w-1/2"
+        in:fly={{ y: prefersReducedMotion.current ? 0 : 8, duration: 180, delay: 40 }}
+        out:fade={{ duration: prefersReducedMotion.current ? 0 : 100 }}
+      >
         <div
           class="relative w-full overflow-hidden rounded-md"
           style:aspect-ratio={originalImageAspectRatio}
@@ -158,70 +176,106 @@
     {/if}
 
     {#if imageUpload.compressedImage}
-      {#if !compressedImageFile}
-        <div class="w-1/2">
-          <div
-            class="w-full overflow-hidden rounded-md"
-            style:aspect-ratio={originalImageAspectRatio}
-          >
-            <Skeleton class="h-full w-full" />
-          </div>
-          <div class="mt-2 flex items-center gap-2">
-            <Progress class="h-4" value={compressionProgress} />
-            <span>{compressionProgress}%</span>
-          </div>
-        </div>
-      {:else}
-        <div class="w-1/2">
-          <div
-            class="relative w-full overflow-hidden rounded-md"
-            style:aspect-ratio={originalImageAspectRatio}
-          >
-            <img
-              bind:this={compressedImageElement}
-              src={compressedImageURL}
-              alt="Compressed"
-              class="absolute inset-0 h-full w-full object-contain"
-              onload={() => {
-                compressedImageDimensions = {
-                  naturalWidth: compressedImageElement?.naturalWidth!,
-                  naturalHeight: compressedImageElement?.naturalHeight!,
-                }
-              }}
-            />
-          </div>
-          <p class="mt-2 text-xl">
-            {compressedImageSize}
-            <span class="text-chart-1">({compressedImageSizeReduction}) </span>
-          </p>
-          <p class="text-muted-foreground">
-            {compressedImageDimensions?.naturalWidth} x
-            {compressedImageDimensions?.naturalHeight}
-          </p>
-        </div>
-      {/if}
+      <div
+        class="w-1/2"
+        in:fly={{ y: prefersReducedMotion.current ? 0 : 8, duration: 180, delay: 80 }}
+        out:fade={{ duration: prefersReducedMotion.current ? 0 : 100 }}
+      >
+        {#key compressedImageFile ? "compressed" : "loading"}
+          {#if !compressedImageFile}
+            <div
+              in:fade={{ duration: prefersReducedMotion.current ? 0 : 140 }}
+              out:fade={{ duration: prefersReducedMotion.current ? 0 : 100 }}
+            >
+              <div
+                class="w-full overflow-hidden rounded-md"
+                style:aspect-ratio={originalImageAspectRatio}
+              >
+                <Skeleton class="h-full w-full" />
+              </div>
+              <div class="mt-2 flex items-center gap-2">
+                <Progress class="h-4" value={tweenedCompressionProgress.current} />
+                <span>{Math.round(tweenedCompressionProgress.current)}%</span>
+              </div>
+            </div>
+          {:else}
+            <div
+              in:fade={{ duration: prefersReducedMotion.current ? 0 : 160 }}
+              out:fade={{ duration: prefersReducedMotion.current ? 0 : 100 }}
+            >
+              <div
+                class="relative w-full overflow-hidden rounded-md"
+                style:aspect-ratio={originalImageAspectRatio}
+              >
+                <img
+                  bind:this={compressedImageElement}
+                  src={compressedImageURL}
+                  alt="Compressed"
+                  class="absolute inset-0 h-full w-full object-contain"
+                  onload={() => {
+                    compressedImageDimensions = {
+                      naturalWidth: compressedImageElement?.naturalWidth!,
+                      naturalHeight: compressedImageElement?.naturalHeight!,
+                    }
+                  }}
+                />
+              </div>
+              <p
+                class="mt-2 text-xl"
+                in:fade={{ duration: prefersReducedMotion.current ? 0 : 180, delay: 40 }}
+              >
+                {compressedImageSize}
+                <span class="text-chart-1">({compressedImageSizeReduction}) </span>
+              </p>
+              <p
+                class="text-muted-foreground"
+                in:fade={{ duration: prefersReducedMotion.current ? 0 : 180, delay: 60 }}
+              >
+                {compressedImageDimensions?.naturalWidth} x
+                {compressedImageDimensions?.naturalHeight}
+              </p>
+            </div>
+          {/if}
+        {/key}
+      </div>
     {/if}
   </div>
 
-  {#if compressedImageURL}
-    <Button
-      class="mt-4 w-full cursor-pointer self-center py-8 text-2xl lg:max-w-lg"
-      onclick={() => {
-        if (!compressedImageFile) return
-        const originalName = imageUpload.originalImage?.name
-        const extensionIndex = originalName?.lastIndexOf(".") ?? -1
-        const baseName =
-          extensionIndex > 0 ? originalName?.slice(0, extensionIndex) : (originalName ?? "image")
-        const link = document.createElement("a")
-        link.href = compressedImageURL!
-        link.download = `${baseName}-compressed.${compressedImageFile.name.split(".").pop() ?? "jpg"}`
-        link.click()
-        link.remove()
-      }}>Download</Button
-    >
-  {:else}
-    <Button disabled class="mt-4 w-full cursor-not-allowed self-center py-8 text-2xl lg:max-w-lg"
-      ><IconLoader2 class="size-6 animate-spin" /></Button
-    >
-  {/if}
+  {#key compressedImageURL ? "download-ready" : "download-loading"}
+    {#if compressedImageURL}
+      <div
+        in:fade={{ duration: prefersReducedMotion.current ? 0 : 140 }}
+        out:fade={{ duration: prefersReducedMotion.current ? 0 : 100 }}
+      >
+        <Button
+          class="mt-4 w-full cursor-pointer self-center py-8 text-2xl lg:max-w-lg"
+          onclick={() => {
+            if (!compressedImageFile) return
+            const originalName = imageUpload.originalImage?.name
+            const extensionIndex = originalName?.lastIndexOf(".") ?? -1
+            const baseName =
+              extensionIndex > 0
+                ? originalName?.slice(0, extensionIndex)
+                : (originalName ?? "image")
+            const link = document.createElement("a")
+            link.href = compressedImageURL!
+            link.download = `${baseName}-compressed.${compressedImageFile.name.split(".").pop() ?? "jpg"}`
+            link.click()
+            link.remove()
+          }}>Download</Button
+        >
+      </div>
+    {:else}
+      <div
+        in:fade={{ duration: prefersReducedMotion.current ? 0 : 140 }}
+        out:fade={{ duration: prefersReducedMotion.current ? 0 : 100 }}
+      >
+        <Button
+          disabled
+          class="mt-4 w-full cursor-not-allowed self-center py-8 text-2xl lg:max-w-lg"
+          ><IconLoader2 class="size-6 animate-spin" /></Button
+        >
+      </div>
+    {/if}
+  {/key}
 </div>
