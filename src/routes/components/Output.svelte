@@ -15,25 +15,32 @@
     duration: 400,
     easing: cubicOut,
   })
-  let roundedCompressionProgress = $derived(Math.round(compressionProgress.current))
 
   let originalImageURL = $state<string | undefined>()
-  let compressedImageURL = $state<string | undefined>()
-  let compressedImageFile = $state<File | undefined>()
+  let compressedImageURL = $derived.by(async () => {
+    if (!imageUpload.compressedImage) return
+    const compressedImage = await imageUpload.compressedImage
+    return URL.createObjectURL(compressedImage)
+  })
 
+  /** @brief Give original image a URL */
   $effect(() => {
-    const originalImage = imageUpload.originalImage
+    if (!imageUpload.originalImage) return
+    const url = URL.createObjectURL(imageUpload.originalImage)
+    originalImageURL = url
+    return () => URL.revokeObjectURL(url)
+  })
 
+  /** @brief Compress image */
+  $effect(() => {
     compressionProgress.target = 0
-    originalImageDimensions = undefined
-    compressedImageDimensions = undefined
 
-    if (!originalImage) {
+    if (!imageUpload.originalImage) {
       imageUpload.compressedImage = undefined
       return
     }
 
-    imageUpload.compressedImage = imageCompression(originalImage, {
+    imageUpload.compressedImage = imageCompression(imageUpload.originalImage, {
       maxSizeMB: 0.8,
       maxWidthOrHeight: 1600,
       preserveExif: false,
@@ -44,76 +51,33 @@
     })
   })
 
-  $effect(() => {
-    const originalImage = imageUpload.originalImage
-    originalImageURL = undefined
-
-    if (!originalImage) return
-
-    const url = URL.createObjectURL(originalImage)
-    originalImageURL = url
-
-    return () => URL.revokeObjectURL(url)
-  })
-
-  $effect(() => {
-    const compressedImage = imageUpload.compressedImage
-    compressedImageFile = undefined
-
-    if (!compressedImage) return
-
-    let active = true
-
-    compressedImage.then((file) => {
-      if (!active) return
-      compressedImageFile = file
-    })
-
-    return () => {
-      active = false
-    }
-  })
-
-  $effect(() => {
-    const compressedImage = compressedImageFile
-    compressedImageURL = undefined
-
-    if (!compressedImage) return
-
-    const url = URL.createObjectURL(compressedImage)
-    compressedImageURL = url
-
-    return () => URL.revokeObjectURL(url)
-  })
-
-  let originalImageSize = $derived(formatSize(imageUpload.originalImage?.size ?? 0))
-  let compressedImageSize = $derived(
-    compressedImageFile ? formatSize(compressedImageFile.size) : undefined,
-  )
-  let compressedImageSizeReduction = $derived.by(() => {
-    if (!imageUpload.originalImage) return
-    if (!compressedImageFile) return
-    return formatSizeReduction(imageUpload.originalImage.size, compressedImageFile.size)
+  let originalImageSize = $state(imageUpload.originalImage?.size ?? 0)
+  let compressedImageSize = $derived.by(async () => {
+    if (!imageUpload.compressedImage) return 0
+    const compressedImage = await imageUpload.compressedImage
+    return compressedImage.size
   })
 
   let originalImageElement: HTMLImageElement | undefined = $state()
   let compressedImageElement: HTMLImageElement | undefined = $state()
 
-  let originalImageDimensions: { naturalWidth: number; naturalHeight: number } | undefined =
-    $state()
-  let compressedImageDimensions: { naturalWidth: number; naturalHeight: number } | undefined =
-    $state()
+  let originalImageDimensions: { naturalWidth: number; naturalHeight: number } = $state({
+    naturalWidth: 0,
+    naturalHeight: 0,
+  })
+  let compressedImageDimensions: { naturalWidth: number; naturalHeight: number } = $state({
+    naturalWidth: 0,
+    naturalHeight: 0,
+  })
 
   let originalImageAspectRatio = $derived(
-    originalImageDimensions
+    originalImageDimensions.naturalHeight > 0
       ? `${originalImageDimensions.naturalWidth} / ${originalImageDimensions.naturalHeight}`
       : "1 / 1",
   )
 
   function reset() {
     compressionProgress.target = 0
-    originalImageDimensions = undefined
-    compressedImageDimensions = undefined
     imageUpload.fileList = undefined
     imageUpload.compressedImage = undefined
   }
@@ -148,24 +112,20 @@
             src={originalImageURL}
             alt="User Uploaded"
             class="absolute inset-0 h-full w-full object-contain"
-            onload={() => {
-              originalImageDimensions = {
-                naturalWidth: originalImageElement?.naturalWidth!,
-                naturalHeight: originalImageElement?.naturalHeight!,
-              }
-            }}
+            bind:naturalWidth={originalImageDimensions.naturalWidth}
+            bind:naturalHeight={originalImageDimensions.naturalHeight}
           />
         </div>
-        <p class="mt-2 text-xl">{originalImageSize}</p>
+        <p class="mt-2 text-xl">{formatSize(originalImageSize)}</p>
         <p class="text-muted-foreground">
-          {originalImageDimensions?.naturalWidth} x
-          {originalImageDimensions?.naturalHeight}
+          {originalImageDimensions.naturalWidth} x
+          {originalImageDimensions.naturalHeight}
         </p>
       </div>
     {/if}
 
     {#if imageUpload.compressedImage}
-      {#if !compressedImageFile}
+      {#await Promise.all([compressedImageURL, compressedImageSize])}
         <div class="w-1/2">
           <div
             class="w-full overflow-hidden rounded-md"
@@ -175,10 +135,10 @@
           </div>
           <div class="mt-2 flex items-center gap-2">
             <Progress class="h-4" value={compressionProgress.current} />
-            <span>{roundedCompressionProgress}%</span>
+            <span>{Math.round(compressionProgress.current)}%</span>
           </div>
         </div>
-      {:else}
+      {:then [compressedImageURL, compressedImageSize]}
         <div class="w-1/2">
           <div
             class="relative w-full overflow-hidden rounded-md"
@@ -189,46 +149,44 @@
               src={compressedImageURL}
               alt="Compressed"
               class="absolute inset-0 h-full w-full object-contain"
-              onload={() => {
-                compressedImageDimensions = {
-                  naturalWidth: compressedImageElement?.naturalWidth!,
-                  naturalHeight: compressedImageElement?.naturalHeight!,
-                }
-              }}
+              bind:naturalWidth={compressedImageDimensions.naturalWidth}
+              bind:naturalHeight={compressedImageDimensions.naturalHeight}
             />
           </div>
           <p class="mt-2 text-xl">
-            {compressedImageSize}
-            <span class="text-chart-1">({compressedImageSizeReduction}) </span>
+            {formatSize(compressedImageSize)}
+            <span class="text-chart-1"
+              >({formatSizeReduction(originalImageSize, compressedImageSize)})
+            </span>
           </p>
           <p class="text-muted-foreground">
-            {compressedImageDimensions?.naturalWidth} x
-            {compressedImageDimensions?.naturalHeight}
+            {compressedImageDimensions.naturalWidth} x
+            {compressedImageDimensions.naturalHeight}
           </p>
         </div>
-      {/if}
+      {/await}
     {/if}
   </div>
 
-  {#if compressedImageURL}
+  {#await compressedImageURL}
+    <Button disabled class="mt-4 w-full cursor-not-allowed self-center py-8 text-2xl lg:max-w-lg"
+      ><IconLoader2 class="size-6 animate-spin" /></Button
+    >
+  {:then compressedImageURL}
     <Button
       class="mt-4 w-full cursor-pointer self-center py-8 text-2xl lg:max-w-lg"
       onclick={() => {
-        if (!compressedImageFile) return
         const originalName = imageUpload.originalImage?.name
         const extensionIndex = originalName?.lastIndexOf(".") ?? -1
         const baseName =
           extensionIndex > 0 ? originalName?.slice(0, extensionIndex) : (originalName ?? "image")
+        const extension = originalName?.split(".").pop() ?? "jpg"
         const link = document.createElement("a")
         link.href = compressedImageURL!
-        link.download = `${baseName}-compressed.${compressedImageFile.name.split(".").pop() ?? "jpg"}`
+        link.download = `${baseName}-compressed.${extension}`
         link.click()
         link.remove()
       }}>Download</Button
     >
-  {:else}
-    <Button disabled class="mt-4 w-full cursor-not-allowed self-center py-8 text-2xl lg:max-w-lg"
-      ><IconLoader2 class="size-6 animate-spin" /></Button
-    >
-  {/if}
+  {/await}
 </div>
