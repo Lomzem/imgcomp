@@ -4,7 +4,7 @@
   import { imageUpload } from "./imageUpload.svelte.ts"
 </script>
 
-<main class="w-svw p-4">
+<main class="w-svw place-self-center p-4">
   {#if !imageUpload.originalImage}
     <FileUpload />
   {:else}

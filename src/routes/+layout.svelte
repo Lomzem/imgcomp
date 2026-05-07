@@ -6,4 +6,4 @@
 </script>
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
-{@render children()}
+<div class="grid h-svh">{@render children()}</div>
