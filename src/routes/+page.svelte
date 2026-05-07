@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { fade } from "svelte/transition"
   import FileUpload from "./components/FileUpload.svelte"
   import Output from "./components/Output.svelte"
   import { imageUpload } from "./imageUpload.svelte.ts"
@@ -8,6 +9,8 @@
   {#if !imageUpload.originalImage}
     <FileUpload />
   {:else}
-    <Output />
+    <div in:fade={{ duration: 300 }}>
+      <Output />
+    </div>
   {/if}
 </main>
