@@ -17,10 +17,22 @@
   })
 
   let originalImageURL = $state<string | undefined>()
-  let compressedImageURL = $derived.by(async () => {
+  let compressedImageURL = $state<string | undefined>()
+
+  $effect(() => {
+    const promise = imageUpload.compressedImage
     if (!imageUpload.compressedImage) return
-    const compressedImage = await imageUpload.compressedImage
-    return URL.createObjectURL(compressedImage)
+    let url: string | undefined
+    let cancelled = false
+    imageUpload.compressedImage.then((compressedImage) => {
+      if (cancelled || promise !== imageUpload.compressedImage) return
+      url = URL.createObjectURL(compressedImage)
+      compressedImageURL = url
+    })
+    return () => {
+      cancelled = true
+      if (url) URL.revokeObjectURL(url)
+    }
   })
 
   /** @brief Give original image a URL */
@@ -168,11 +180,11 @@
     {/if}
   </div>
 
-  {#await compressedImageURL}
+  {#if !compressedImageURL}
     <Button disabled class="mt-4 w-full cursor-not-allowed self-center py-8 text-2xl lg:max-w-lg"
       ><IconLoader2 class="size-6 animate-spin" /></Button
     >
-  {:then compressedImageURL}
+  {:else}
     <Button
       class="mt-4 w-full cursor-pointer self-center py-8 text-2xl lg:max-w-lg"
       onclick={() => {
@@ -188,5 +200,5 @@
         link.remove()
       }}>Download</Button
     >
-  {/await}
+  {/if}
 </div>
